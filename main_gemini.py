@@ -47,7 +47,7 @@ gemini_llm = LLM(
 )
 
 print("✅ Gemini API 연결 설정 완료!")
-print(f"   모델: gemini-2.0-flash (무료)")
+print(f"   모델: gemini-2.5-flash (무료)")
 print()
 
 
@@ -64,7 +64,7 @@ researcher = Agent(
         최신 기술 트렌드를 빠르게 파악하고,
         신뢰할 수 있는 정보를 정리하는 전문가입니다.
     """,
-    llm=gemini_llm,  # ← Gemini 사용!
+    llm=gemini_llm,
     verbose=True,
 )
 
@@ -77,11 +77,11 @@ analyst = Agent(
         복잡한 기술 정보를 비전공자도 이해할 수 있게
         정리하고 패턴을 찾아내는 것이 특기입니다.
     """,
-    llm=gemini_llm,  # ← Gemini 사용!
+    llm=gemini_llm,
     verbose=True,
 )
 
-# 팀원 3: 작가
+# 팀원 3: 작가 (기본: 블로그 스타일)
 writer = Agent(
     role="테크 블로그 작가",
     goal="분석 결과를 읽기 쉬운 한국어 보고서로 작성한다",
@@ -90,9 +90,38 @@ writer = Agent(
         복잡한 기술 내용을 쉽고 재미있게 풀어쓰는 능력이 있습니다.
         마크다운 형식으로 깔끔하게 작성합니다.
     """,
-    llm=gemini_llm,  # ← Gemini 사용!
+    llm=gemini_llm,
     verbose=True,
 )
+
+# --- 작가 스타일 옵션 (사용하려면 위의 writer를 주석 처리하고 아래 중 하나를 풀기) ---
+
+# [옵션 1] 9시 뉴스 앵커 스타일
+# writer = Agent(
+#     role="9시 뉴스 앵커",
+#     goal="분석 결과를 뉴스 리포트 형식으로 전달한다",
+#     backstory="""
+#         당신은 KBS 9시 뉴스의 베테랑 앵커입니다.
+#         기술 뉴스를 시청자가 이해하기 쉽게 전달하며,
+#         현장 기자 리포트를 인용하는 스타일로 진행합니다.
+#     """,
+#     llm=gemini_llm,
+#     verbose=True,
+# )
+
+# [옵션 2] IT 팟캐스트 대화 스타일
+# writer = Agent(
+#     role="IT 팟캐스트 진행자",
+#     goal="분석 결과를 두 진행자의 대화 형식으로 풀어낸다",
+#     backstory="""
+#         당신은 인기 IT 팟캐스트 '개발자 수다'의 대본 작가입니다.
+#         호기심 많은 주니어 개발자 '민수'와
+#         경험 많은 시니어 개발자 '지영'이
+#         편하게 수다 떠는 형식으로 대본을 씁니다.
+#     """,
+#     llm=gemini_llm,
+#     verbose=True,
+# )
 
 
 # ============================================================
@@ -125,10 +154,10 @@ analysis_task = Task(
     """,
     expected_output="구조화된 트렌드 분석 결과",
     agent=analyst,
-    context=[research_task],  # ← 리서치 결과를 입력으로 받음
+    context=[research_task],
 )
 
-# 할 일 3: 보고서 작성
+# 할 일 3: 보고서 작성 (기본: 블로그 스타일)
 writing_task = Task(
     description="""
         분석 결과를 바탕으로 한국어 보고서를 작성하세요.
@@ -142,9 +171,44 @@ writing_task = Task(
     """,
     expected_output="마크다운 형식의 한국어 보고서",
     agent=writer,
-    context=[analysis_task],  # ← 분석 결과를 입력으로 받음
+    context=[analysis_task],
     output_file="report.md",
 )
+
+# --- 보고서 스타일 옵션 (사용하려면 위의 writing_task를 주석 처리하고 아래 중 하나를 풀기) ---
+
+# [옵션 1] 9시 뉴스 대본 스타일
+# writing_task = Task(
+#     description="""
+#         분석 결과를 9시 뉴스 대본 형식으로 작성하세요.
+#         형식:
+#         - 앵커 오프닝 멘트
+#         - 현장 기자 리포트 (트렌드별)
+#         - 전문가 인터뷰 인용
+#         - 앵커 클로징 멘트
+#         모든 내용은 한국어로 작성해주세요.
+#     """,
+#     expected_output="마크다운 형식의 한국어 뉴스 대본",
+#     agent=writer,
+#     context=[analysis_task],
+#     output_file="report.md",
+# )
+
+# [옵션 2] 팟캐스트 대화 스타일
+# writing_task = Task(
+#     description="""
+#         분석 결과를 팟캐스트 대화 형식으로 작성하세요.
+#         형식:
+#         - 민수: (궁금한 점을 질문)
+#         - 지영: (경험을 바탕으로 설명)
+#         자연스럽고 재미있는 대화체로 작성해주세요.
+#         모든 내용은 한국어로 작성해주세요.
+#     """,
+#     expected_output="마크다운 형식의 한국어 팟캐스트 대본",
+#     agent=writer,
+#     context=[analysis_task],
+#     output_file="report.md",
+# )
 
 
 # ============================================================
@@ -161,7 +225,7 @@ crew = Crew(
 if __name__ == "__main__":
     print("=" * 60)
     print("🚀 AI 에이전트 트렌드 리서치 Crew 시작!")
-    print("   (Gemini 2.0 Flash 무료 티어 사용)")
+    print("   (Gemini 2.5 Flash 무료 티어 사용)")
     print("=" * 60)
     print()
     print("👥 팀 구성:")
